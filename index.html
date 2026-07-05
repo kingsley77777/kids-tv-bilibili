@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0f0f1a">
+<title>小企鹅动画屋</title>
+<script>
+const m={name:"小企鹅动画屋",short_name:"动画屋",start_url:location.href,display:"standalone",orientation:"landscape",background_color:"#0f0f1a",theme_color:"#ff6b35",icons:[{src:"data:image/svg+xml,"+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 192 192"><rect width="192" height="192" rx="40" fill="#ff6b35"/><text x="96" y="130" text-anchor="middle" font-size="100">🐧</text></svg>'),sizes:"192x192",type:"image/svg+xml"}]};
+document.head.appendChild(Object.assign(document.createElement("link"),{rel:"manifest",href:URL.createObjectURL(new Blob([JSON.stringify(m)],{type:"application/json"}))}));
+</script>
+<style>
+:root{
+--bg:#0f0f1a;--bg2:#1a1a28;--card:rgba(255,255,255,.06);--cardH:rgba(255,255,255,.12);
+--orange:#ff6b35;--orangeL:#ff8c5a;--blue:#4da6ff;--purple:#7c5cfc;--pink:#ff6b9d;
+--t1:#fff;--t2:rgba(255,255,255,.7);--t3:rgba(255,255,255,.4);
+--focus:0 0 0 4px rgba(255,107,53,.4),0 0 30px rgba(255,107,53,.2);
+--r:18px;--rt:24px;--tf:.15s cubic-bezier(.4,0,.2,1);--ts:.3s cubic-bezier(.4,0,.2,1);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Noto Sans SC","Microsoft YaHei",sans-serif;color:var(--t1);height:100vh;width:100vw;overflow:hidden;user-select:none;-webkit-user-select:none;-webkit-font-smoothing:antialiased}
+#app{display:flex;flex-direction:column;height:100vh;width:100vw;position:relative;background:linear-gradient(180deg,#1a1a35 0,#141428 15%,var(--bg) 40%)}
+
+/* 顶部 */
+.top-bar{display:flex;align-items:center;justify-content:space-between;padding:22px 48px 14px;flex-shrink:0;z-index:10}
+.brand{display:flex;align-items:center;gap:14px}
+.brand-logo{width:50px;height:50px;border-radius:14px;background:linear-gradient(135deg,var(--orange),var(--pink));display:flex;align-items:center;justify-content:center;font-size:30px;box-shadow:0 4px 20px rgba(255,107,53,.3)}
+.brand-text h1{font-size:28px;font-weight:700;letter-spacing:1px;background:linear-gradient(135deg,#fff,#ffccb0);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.brand-sub{font-size:13px;color:var(--t3);letter-spacing:2px}
+.top-actions{display:flex;align-items:center;gap:14px}
+.top-btn{display:flex;align-items:center;gap:8px;padding:10px 20px;border-radius:25px;background:rgba(255,255,255,.08);border:none;color:var(--t2);font-size:15px;cursor:pointer;transition:var(--tf);font-family:inherit}
+.top-btn:hover,.top-btn:focus,.top-btn.focused{background:rgba(255,255,255,.15);color:var(--t1);outline:none;box-shadow:0 0 0 2px rgba(255,255,255,.2)}
+.top-btn.active{background:var(--orange);color:#fff;box-shadow:0 2px 12px rgba(255,107,53,.4)}
+
+/* Banner */
+.banner-section{padding:6px 48px 18px;flex-shrink:0;z-index:5}
+.banner-container{position:relative;width:100%;height:270px;border-radius:22px;overflow:hidden;background:linear-gradient(135deg,#1e1e3a,#252550)}
+.banner-slide{position:absolute;inset:0;display:flex;align-items:center;padding:36px 48px;opacity:0;transition:opacity .6s;cursor:pointer}
+.banner-slide.active{opacity:1;z-index:2}
+.banner-bg{position:absolute;inset:0;background-size:cover;background-position:center 20%;filter:brightness(.4) blur(2px);transform:scale(1.05)}
+.banner-content{position:relative;z-index:3;max-width:55%}
+.banner-tag{display:inline-block;padding:4px 14px;border-radius:12px;background:var(--orange);color:#fff;font-size:13px;font-weight:600;margin-bottom:12px}
+.banner-title{font-size:40px;font-weight:700;margin-bottom:8px;line-height:1.2;text-shadow:0 2px 20px rgba(0,0,0,.5)}
+.banner-sub{font-size:18px;color:var(--t2);line-height:1.5;text-shadow:0 1px 10px rgba(0,0,0,.5)}
+.banner-play-btn{display:inline-flex;align-items:center;gap:8px;margin-top:16px;padding:14px 32px;border-radius:28px;background:var(--orange);border:none;color:#fff;font-size:18px;font-weight:600;cursor:pointer;transition:var(--tf);font-family:inherit}
+.banner-dots{position:absolute;bottom:16px;right:24px;display:flex;gap:8px;z-index:5}
+.banner-dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.4);transition:var(--ts);cursor:pointer}
+.banner-dot.active{background:var(--orange);width:24px;border-radius:4px}
+
+/* 分类标签 */
+.category-bar{padding:0 48px;flex-shrink:0;display:flex;gap:12px;margin-bottom:6px;z-index:8}
+.cat-tag{padding:10px 22px;border-radius:var(--rt);background:rgba(255,255,255,.06);border:1.5px solid transparent;color:var(--t2);font-size:16px;font-weight:500;cursor:pointer;transition:var(--tf);white-space:nowrap;font-family:inherit}
+.cat-tag:hover,.cat-tag:focus,.cat-tag.focused{background:rgba(255,255,255,.12);color:var(--t1);outline:none}
+.cat-tag.active{background:rgba(255,107,53,.2);color:var(--orangeL);border-color:rgba(255,107,53,.4);font-weight:600}
+.cat-count{font-size:12px;opacity:.6;margin-left:4px}
+.cat-emoji{margin-right:6px;font-size:16px}
+
+/* 内容区 */
+.content-scroll{flex:1;overflow-y:auto;overflow-x:hidden;padding:0 48px 32px;z-index:1}
+.content-scroll::-webkit-scrollbar{width:5px}
+.content-scroll::-webkit-scrollbar-track{background:transparent}
+.content-scroll::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:3px}
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;margin-top:8px}
+.section-title{font-size:22px;font-weight:700;display:flex;align-items:center;gap:8px}
+.section-title .deco{width:4px;height:20px;border-radius:2px;background:var(--orange)}
+.card-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:20px;padding-bottom:16px}
+
+/* 卡片 */
+.card{background:var(--card);border-radius:var(--r);overflow:hidden;cursor:pointer;border:2.5px solid transparent;position:relative;backdrop-filter:blur(10px);transition:transform var(--tf),box-shadow var(--tf),background var(--tf)}
+.card:hover,.card:focus,.card.focused{transform:translateY(-4px) scale(1.03);border-color:var(--orange);box-shadow:var(--focus);background:var(--cardH);outline:none;z-index:10}
+.card-cover{width:100%;aspect-ratio:16/9;background-size:cover;background-position:center;background-color:#252540;position:relative;display:flex;align-items:center;justify-content:center}
+.card-cover.loading::after{content:"";width:32px;height:32px;border:2.5px solid rgba(255,255,255,.1);border-top-color:var(--orange);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.card-play-overlay{position:absolute;bottom:12px;left:12px;display:flex;align-items:center;gap:6px;background:var(--orange);color:#fff;padding:6px 14px;border-radius:20px;font-size:13px;font-weight:600;opacity:0;transform:translateY(8px);transition:all var(--tf);z-index:2}
+.card.focused .card-play-overlay{opacity:1;transform:translateY(0)}
+.card-episode-badge{position:absolute;top:10px;left:10px;background:linear-gradient(135deg,var(--orange),var(--pink));color:#fff;padding:3px 12px;border-radius:12px;font-size:12px;font-weight:600;z-index:1;box-shadow:0 2px 8px rgba(0,0,0,.3)}
+.card-collection-badge{position:absolute;top:10px;right:10px;background:rgba(0,0,0,.75);color:var(--orangeL);padding:4px 10px;border-radius:10px;font-size:12px;font-weight:600;z-index:1;display:flex;align-items:center;gap:4px}
+.card-body{padding:12px 14px 14px}
+.card-title{font-size:16px;font-weight:600;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;color:var(--t1)}
+.card-meta{font-size:12px;color:var(--t3);margin-top:4px}
+
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:80px 20px;color:var(--t3);font-size:18px;text-align:center;grid-column:1/-1}
+.empty-icon{font-size:64px;margin-bottom:16px;opacity:.5}
+
+/* 底部彩条 */
+.bottom-bar{position:fixed;bottom:0;left:0;right:0;height:4px;background:linear-gradient(90deg,var(--orange),var(--pink),var(--purple),var(--blue));opacity:.6;z-index:20;pointer-events:none}
+
+/* ============ 选集页面 ============ */
+#episode-view{position:fixed;inset:0;background:var(--bg);z-index:80;display:none;flex-direction:column}
+#episode-view.active{display:flex}
+.ep-header{display:flex;align-items:center;padding:22px 40px;gap:20px;flex-shrink:0;border-bottom:1px solid rgba(255,255,255,.06)}
+.ep-back-btn{display:flex;align-items:center;gap:8px;padding:10px 22px;border-radius:22px;background:rgba(255,255,255,.08);border:none;color:var(--t2);font-size:16px;cursor:pointer;font-weight:500;transition:var(--tf);font-family:inherit}
+.ep-back-btn:hover,.ep-back-btn:focus{background:rgba(255,255,255,.15);color:var(--t1);outline:none}
+.ep-title-area{flex:1}
+.ep-main-title{font-size:26px;font-weight:700;color:var(--t1)}
+.ep-sub-info{font-size:14px;color:var(--t3);margin-top:4px}
+.ep-play-all-btn{display:flex;align-items:center;gap:8px;padding:12px 26px;border-radius:24px;background:var(--orange);border:none;color:#fff;font-size:16px;font-weight:600;cursor:pointer;transition:var(--tf);font-family:inherit}
+.ep-play-all-btn:hover,.ep-play-all-btn:focus{background:var(--orangeL);outline:none;box-shadow:0 4px 16px rgba(255,107,53,.4)}
+.ep-grid{flex:1;overflow-y:auto;padding:20px 40px 32px;display:grid;grid-template-columns:repeat(5,1fr);gap:18px;align-content:start}
+.ep-grid::-webkit-scrollbar{width:5px}
+.ep-grid::-webkit-scrollbar-track{background:transparent}
+.ep-grid::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:3px}
+.ep-card{background:var(--card);border-radius:var(--r);overflow:hidden;cursor:pointer;border:2.5px solid transparent;transition:all var(--tf);position:relative}
+.ep-card:hover,.ep-card:focus,.ep-card.focused{transform:translateY(-3px) scale(1.02);border-color:var(--orange);box-shadow:var(--focus);background:var(--cardH);outline:none;z-index:5}
+.ep-card.playing{border-color:var(--blue);box-shadow:0 0 0 3px rgba(77,166,255,.3)}
+.ep-card.playing::after{content:"▶ 播放中";position:absolute;top:8px;right:8px;background:var(--blue);color:#fff;padding:3px 10px;border-radius:10px;font-size:11px;font-weight:600;z-index:2}
+.ep-card-num{position:absolute;top:8px;left:8px;background:rgba(0,0,0,.75);color:#fff;width:30px;height:30px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;z-index:1}
+.ep-card .ep-cover{width:100%;aspect-ratio:16/9;background-size:cover;background-position:center;background-color:#252540;display:flex;align-items:center;justify-content:center}
+.ep-card .ep-cover.loading::after{content:"";width:28px;height:28px;border:2px solid rgba(255,255,255,.1);border-top-color:var(--orange);border-radius:50%;animation:spin .7s linear infinite}
+.ep-card-body{padding:10px 12px 12px}
+.ep-card-title{font-size:14px;font-weight:600;line-height:1.3;color:var(--t1);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.ep-card-duration{font-size:11px;color:var(--t3);margin-top:2px}
+
+/* ============ 播放器 ============ */
+#player-overlay{position:fixed;inset:0;background:#000;z-index:100;display:none;flex-direction:column}
+#player-overlay.active{display:flex}
+.player-top-bar{display:flex;align-items:center;padding:14px 28px;gap:16px;flex-shrink:0;background:linear-gradient(180deg,rgba(0,0,0,.85),transparent);position:relative;z-index:5;pointer-events:none}
+.player-top-bar>*{pointer-events:auto}
+.player-back-btn{display:flex;align-items:center;gap:6px;padding:10px 20px;border-radius:22px;background:rgba(255,255,255,.12);border:none;color:#fff;font-size:16px;cursor:pointer;font-weight:500;transition:var(--tf);font-family:inherit}
+.player-back-btn:hover,.player-back-btn:focus{background:rgba(255,255,255,.22);outline:none}
+.player-info-area{flex:1;display:flex;flex-direction:column}
+.player-now-title{font-size:18px;font-weight:600;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.5)}
+.player-meta-row{display:flex;align-items:center;gap:16px;margin-top:2px}
+.player-ep-label{font-size:13px;color:var(--t3)}
+.player-next-btn{display:flex;align-items:center;gap:4px;padding:6px 14px;border-radius:16px;background:rgba(255,255,255,.1);border:none;color:var(--t2);font-size:13px;cursor:pointer;transition:var(--tf);font-family:inherit;pointer-events:auto}
+.player-next-btn:hover,.player-next-btn:focus{background:rgba(255,255,255,.2);color:var(--t1);outline:none}
+#player-frame{flex:1;border:none;width:100%}
+.player-loading{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:16px;z-index:1}
+.player-loading-spinner{width:48px;height:48px;border:4px solid rgba(255,255,255,.15);border-top-color:var(--orange);border-radius:50%;animation:spin .8s linear infinite}
+.player-loading-text{color:rgba(255,255,255,.6);font-size:16px}
+
+/* 选集弹窗（播放器内） */
+.ep-popup{position:fixed;bottom:0;left:0;right:0;max-height:50vh;background:rgba(20,20,40,.97);z-index:110;display:none;flex-direction:column;border-radius:20px 20px 0 0;overflow:hidden;border-top:1px solid rgba(255,255,255,.1);backdrop-filter:blur(20px)}
+.ep-popup.active{display:flex}
+.ep-popup-header{display:flex;align-items:center;justify-content:space-between;padding:16px 24px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0}
+.ep-popup-title{font-size:18px;font-weight:600}
+.ep-popup-close{padding:6px 16px;border-radius:16px;background:rgba(255,255,255,.08);border:none;color:var(--t2);font-size:14px;cursor:pointer;font-family:inherit}
+.ep-popup-list{flex:1;overflow-y:auto;padding:12px 20px}
+.ep-popup-list::-webkit-scrollbar{width:4px}
+.ep-popup-list::-webkit-scrollbar-track{background:transparent}
+.ep-popup-list::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:2px}
+.ep-popup-item{display:flex;align-items:center;gap:14px;padding:12px 16px;border-radius:12px;cursor:pointer;transition:var(--tf);border:2px solid transparent}
+.ep-popup-item:hover,.ep-popup-item:focus,.ep-popup-item.focused{background:rgba(255,255,255,.06);outline:none;border-color:rgba(255,255,255,.15)}
+.ep-popup-item.playing{background:rgba(77,166,255,.1);border-color:rgba(77,166,255,.3)}
+.ep-popup-num{width:36px;height:36px;border-radius:10px;background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;flex-shrink:0}
+.ep-popup-item.playing .ep-popup-num{background:var(--blue);color:#fff}
+.ep-popup-item-title{flex:1;font-size:15px;font-weight:500;color:var(--t1)}
+.ep-popup-item.playing .ep-popup-item-title{color:var(--blue)}
+.ep-popup-item-time{font-size:12px;color:var(--t3)}
+
+/* Toast */
+.toast{position:fixed;top:24px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.85);color:#fff;padding:12px 28px;border-radius:24px;font-size:16px;z-index:300;opacity:0;transition:opacity .3s;pointer-events:none;backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.15)}
+.toast.show{opacity:1}
+
+/* 管理面板 */
+#admin-overlay{position:fixed;inset:0;background:rgba(0,0,0,.95);z-index:200;display:none;align-items:center;justify-content:center}
+#admin-overlay.active{display:flex}
+.admin-panel{width:85vw;max-width:920px;max-height:85vh;background:#181828;border-radius:24px;padding:36px;border:1px solid rgba(255,255,255,.1);display:flex;flex-direction:column}
+.admin-panel h2{font-size:28px;margin-bottom:4px;color:var(--orangeL)}
+.admin-hint{color:var(--t3);font-size:14px;margin-bottom:16px;line-height:1.6}
+.admin-hint code{background:rgba(255,255,255,.08);padding:2px 8px;border-radius:4px;font-size:13px}
+.admin-panel textarea{flex:1;background:#0f0f1a;color:#a0ffa0;border:2px solid rgba(255,255,255,.1);border-radius:14px;padding:18px;font-family:"SF Mono","Fira Code",monospace;font-size:15px;line-height:1.7;resize:none;min-height:300px}
+.admin-panel textarea:focus{border-color:var(--blue);outline:none}
+.admin-btns{display:flex;gap:12px;margin-top:16px;justify-content:flex-end}
+.admin-btns button{padding:12px 28px;border-radius:22px;font-size:16px;font-weight:600;cursor:pointer;border:none;transition:var(--tf);font-family:inherit}
+.btn-primary{background:var(--orange);color:#fff}
+.btn-primary:hover{background:var(--orangeL);box-shadow:0 4px 16px rgba(255,107,53,.4)}
+.btn-secondary{background:rgba(255,255,255,.08);color:var(--t2)}
+.btn-secondary:hover{background:rgba(255,255,255,.15)}
+
+/* 响应式 */
+@media(max-width:1400px){.card-grid,.ep-grid{grid-template-columns:repeat(4,1fr)}.banner-section{padding:6px 36px 16px}.category-bar{padding:0 36px}.content-scroll{padding:0 36px 24px}.top-bar{padding:20px 36px 12px}.ep-header,.ep-grid{padding-left:36px;padding-right:36px}}
+@media(max-width:1100px){.card-grid,.ep-grid{grid-template-columns:repeat(3,1fr)}.banner-title{font-size:32px}.banner-section{padding:6px 28px 14px}.category-bar{padding:0 28px}.content-scroll{padding:0 28px 20px}.top-bar{padding:16px 28px 10px}.ep-header{padding:16px 28px}.ep-grid{padding:16px 28px 20px}}
+@media(max-width:800px){.card-grid,.ep-grid{grid-template-columns:repeat(2,1fr);gap:14px}.banner-container{height:200px}.banner-title{font-size:26px}.banner-content{max-width:70%}.banner-section{padding:6px 16px 10px}.category-bar{padding:0 16px;gap:8px}.content-scroll{padding:0 16px 16px}.top-bar{padding:12px 16px 8px}.cat-tag{font-size:14px;padding:8px 16px}.ep-grid{gap:12px}}
+</style>
+</head>
+<body>
+<div class="toast" id="toast"></div>
+
+<!-- 主视图 -->
+<div id="app">
+<div class="top-bar">
+<div class="brand"><div class="brand-logo">🐧</div><div class="brand-text"><h1>小企鹅动画屋</h1><div class="brand-sub">宝宝专属 · 安全纯净</div></div></div>
+<div class="top-actions">
+<button class="top-btn" id="btn-history" onclick="showHistory()"><span>🕐</span> 最近看过</button>
+<button class="top-btn" id="btn-admin" onclick="toggleAdmin()" title="家长管理"><span>🔒</span> 家长</button>
+</div>
+</div>
+<div class="banner-section" id="banner-section">
+<div class="banner-container" id="banner-container"><div class="banner-dots" id="banner-dots"></div></div>
+</div>
+<div class="category-bar" id="category-bar"></div>
+<div class="content-scroll" id="content-scroll"><div class="card-grid" id="card-grid"></div></div>
+<div class="bottom-bar"></div>
+</div>
+
+<!-- 选集页面 -->
+<div id="episode-view">
+<div class="ep-header">
+<button class="ep-back-btn" onclick="closeEpisodeView()">← 返回</button>
+<div class="ep-title-area">
+<div class="ep-main-title" id="ep-main-title"></div>
+<div class="ep-sub-info" id="ep-sub-info"></div>
+</div>
+<button class="ep-play-all-btn" id="ep-play-all-btn" onclick="playAllEpisodes()">▶ 全部播放</button>
+</div>
+<div class="ep-grid" id="ep-grid"></div>
+</div>
+
+<!-- 播放器 -->
+<div id="player-overlay">
+<div class="player-top-bar">
+<button class="player-back-btn" onclick="closePlayer()">← 返回</button>
+<div class="player-info-area">
+<div class="player-now-title" id="player-now-title"></div>
+<div class="player-meta-row"><span class="player-ep-label" id="player-ep-label"></span><button class="player-next-btn" id="player-next-btn" onclick="playNextEpisode()" style="display:none">下一集 ▶</button></div>
+</div>
+<button class="player-back-btn" id="player-ep-list-btn" onclick="toggleEpPopup()" style="display:none">📋 选集</button>
+</div>
+<iframe id="player-frame" allowfullscreen="true" allow="autoplay;encrypted-media"></iframe>
+<div class="player-loading" id="player-loading"><div class="player-loading-spinner"></div><div class="player-loading-text">正在加载动画片...</div></div>
+</div>
+
+<!-- 播放器内选集弹窗 -->
+<div class="ep-popup" id="ep-popup">
+<div class="ep-popup-header"><div class="ep-popup-title">📋 选集</div><button class="ep-popup-close" onclick="toggleEpPopup()">关闭</button></div>
+<div class="ep-popup-list" id="ep-popup-list"></div>
+</div>
+
+<!-- 管理面板 -->
+<div id="admin-overlay">
+<div class="admin-panel">
+<h2>🔒 家长管理</h2>
+<div class="admin-hint">
+<b>单视频：</b><code>BV号 | 标题 | 分类 | 标签</code><br>
+<b>多P合集（自动识别）：</b><code>BV号 | 标题 | 分类 | 标签</code> — 系统会自动获取分P列表<br>
+<b>手动合集（多BV号）：</b><code>BV1,BV2,BV3 | 合集标题 | 分类 | 标签</code><br>
+<b>合集URL（自动解析）：</b><code>合集链接 | 标题 | 分类 | 标签</code>
+</div>
+<textarea id="admin-textarea" spellcheck="false"></textarea>
+<div class="admin-btns">
+<button class="btn-secondary" onclick="toggleAdmin()">取消</button>
+<button class="btn-secondary" onclick="resetToDefault()">恢复默认</button>
+<button class="btn-secondary" onclick="exportConfig()">📤 导出</button>
+<button class="btn-secondary" onclick="importConfig()">📥 导入</button>
+<button class="btn-primary" onclick="saveAndRefresh()">💾 保存并生效</button>
+</div>
+</div>
+</div>
+
+<script>
+// ========== 数据 ==========
+const DEFAULT_VIDEOS = [
+{ bvid:"BV1884y15755",title:"山海经 动画故事",category:"益智启蒙",tag:"20集" },
+{ bvid:"BV1gC41177sy",title:"小猪佩奇 第一季",category:"可爱日常",tag:"52集" },
+{ bvid:"BV1Ns411w7cF",title:"汪汪队立大功 合集",category:"冒险故事",tag:"多集" },
+{ bvid:"BV1bJ411v7zA",title:"超级飞侠 大合集",category:"冒险故事",tag:"多集" },
+{ bvid:"BV1Vx411c7Yy",title:"萌鸡小队 第一季",category:"可爱日常",tag:"多集" },
+{ bvid:"BV1bx411c7mh",title:"海底小纵队 第一季",category:"益智启蒙",tag:"多集" },
+{ bvid:"BV1oW411B7Jk",title:"西游记之大圣归来",category:"经典重温",tag:"电影" },
+{ bvid:"BV1es41127bE",title:"哆啦A梦 剧场版合集",category:"经典重温",tag:"多集" },
+{ bvid:"BV1Hx411c7mo",title:"熊出没 精选合集",category:"冒险故事",tag:"多集" },
+{ bvid:"BV1ns411w7cF",title:"宝宝巴士 儿歌大全",category:"益智启蒙",tag:"音乐" },
+{ bvid:"BV17x411w7KC",title:"猫和老鼠 经典全集",category:"经典重温",tag:"多集" },
+];
+
+const CATEGORIES=[
+{id:"all",label:"全部",emoji:"🎬"},
+{id:"热门推荐",label:"热门推荐",emoji:"⭐"},
+{id:"益智启蒙",label:"益智启蒙",emoji:"🧠"},
+{id:"冒险故事",label:"冒险故事",emoji:"🚀"},
+{id:"可爱日常",label:"可爱日常",emoji:"💕"},
+{id:"经典重温",label:"经典重温",emoji:"🏆"},
+];
+
+const SK_VIDEOS="ktv_v3_videos",SK_HISTORY="ktv_v3_hist",SK_CAT="ktv_v3_cat",SK_EPDATA="ktv_v3_ep";
+
+let videos=[],activeCat="all",focusIdx=0,focusRow=0,focusCol=0,gridCols=5;
+let playerVisible=false,episodeViewVisible=false,epPopupVisible=false;
+let bannerTimer=null,bannerIdx=0,bannerVids=[];
+let currentEpisodes=null,currentEpIndex=-1,currentCollectionTitle="";
+let epDataCache={};
+
+// ========== 初始化 ==========
+function init(){
+loadVideos();updateGridCols();loadCat();renderAll();bindKeys();bindResize();
+startBanner();
+setTimeout(()=>focusCard(0),400);
+showToast("🐧 方向键选择 · 确认键播放 · 合集自动识别分集");
+}
+
+function loadVideos(){
+try{const r=localStorage.getItem(SK_VIDEOS);if(r){const p=JSON.parse(r);if(Array.isArray(p)&&p.length>0){videos=p;return}}}catch(e){}
+videos=[...DEFAULT_VIDEOS];
+}
+function loadCat(){
+try{const s=localStorage.getItem(SK_CAT);if(s&&CATEGORIES.find(c=>c.id===s))activeCat=s;}catch(e){}
+}
+function loadEpCache(){
+try{const r=localStorage.getItem(SK_EPDATA);if(r)epDataCache=JSON.parse(r);}catch(e){}
+}
+function saveEpCache(){
+try{localStorage.setItem(SK_EPDATA,JSON.stringify(epDataCache));}catch(e){}
+}
+function saveCat(){localStorage.setItem(SK_CAT,activeCat);}
+function updateGridCols(){
+const w=window.innerWidth;
+if(w<=800)gridCols=2;else if(w<=1100)gridCols=3;else if(w<=1400)gridCols=4;else gridCols=5;
+}
+function filtered(){return activeCat==="all"?videos:videos.filter(v=>v.category===activeCat);}
+
+// ========== Banner ==========
+function renderBanner(){
+const c=document.getElementById("banner-container"),dots=document.getElementById("banner-dots");
+const hot=videos.filter(v=>v.category==="热门推荐");
+bannerVids=hot.length>=3?hot.slice(0,5):videos.slice(0,Math.min(5,videos.length));
+if(!bannerVids.length){document.getElementById("banner-section").style.display="none";return}
+document.getElementById("banner-section").style.display="block";
+bannerIdx=Math.min(bannerIdx,bannerVids.length-1);
+c.querySelectorAll(".banner-slide").forEach(e=>e.remove());dots.innerHTML="";
+bannerVids.forEach((v,i)=>{
+const s=document.createElement("div");s.className=`banner-slide${i===bannerIdx?' active':''}`;
+s.dataset.index=i;s.addEventListener("click",()=>openVideo(v));
+const bg=document.createElement("div");bg.className="banner-bg";loadCover(v.bvid,bg,true);
+const cn=document.createElement("div");cn.className="banner-content";
+cn.innerHTML=`<div class="banner-tag">🔥 推荐</div><div class="banner-title">${v.title}</div><div class="banner-sub">${v.tag||''} · 点击立即播放</div><button class="banner-play-btn" tabindex="-1">▶ 立即播放</button>`;
+s.appendChild(bg);s.appendChild(cn);c.appendChild(s);
+const d=document.createElement("div");d.className=`banner-dot${i===bannerIdx?' active':''}`;
+d.addEventListener("click",e=>{e.stopPropagation();setBanner(i)});dots.appendChild(d);
+});
+}
+function setBanner(i){bannerIdx=i;document.querySelectorAll(".banner-slide").forEach((s,j)=>s.classList.toggle("active",j===i));document.querySelectorAll(".banner-dot").forEach((d,j)=>d.classList.toggle("active",j===i));}
+function startBanner(){if(bannerTimer)clearInterval(bannerTimer);bannerTimer=setInterval(()=>{if(playerVisible||episodeViewVisible)return;if(bannerVids.length<=1)return;setBanner((bannerIdx+1)%bannerVids.length)},5000);}
+
+// ========== 封面加载 ==========
+// 优先使用 Android 原生桥接（HttpURLConnection，零CORS问题）
+// 回退到 JS fetch（Web场景）
+window._coverCallbacks = {};
+let _coverCbId = 0;
+
+function getCoverViaNative(bvid) {
+  return new Promise((resolve) => {
+    const cbId = "cb" + (++_coverCbId);
+    window._coverCallbacks[cbId] = (url) => {
+      delete window._coverCallbacks[cbId];
+      resolve(url || "");
+    };
+    // 3秒超时
+    setTimeout(() => {
+      if (window._coverCallbacks[cbId]) {
+        delete window._coverCallbacks[cbId];
+        resolve("");
+      }
+    }, 3000);
+    try {
+      if (typeof NativeBridge !== "undefined" && NativeBridge.fetchCover) {
+        NativeBridge.fetchCover(bvid, cbId);
+      } else {
+        resolve("");
+      }
+    } catch(e) { resolve(""); }
+  });
+}
+
+async function loadCover(bvid, el, banner){
+  el.classList.add("loading");
+  let coverUrl = "";
+
+  // 策略1：Android 原生桥接（最可靠，HttpURLConnection 不受WebView CORS限制）
+  coverUrl = await getCoverViaNative(bvid);
+
+  // 策略2：JS fetch（Web/调试场景）
+  if (!coverUrl) {
+    try {
+      const r = await fetch(`https://api.bilibili.com/x/web-interface/view?bvid=${bvid}`);
+      const d = await r.json();
+      if (d.code === 0 && d.data && d.data.pic) {
+        coverUrl = d.data.pic.replace("http://", "https://");
+        if (!banner) coverUrl += "@480w_270h";
+      }
+    } catch(e) {}
+  }
+
+  // 渲染封面
+  el.classList.remove("loading");
+  el.innerHTML = "";
+  el.style.background = "";
+  el.style.display = "";
+
+  if (coverUrl) {
+    const img = document.createElement("img");
+    img.style.cssText = "width:100%;height:100%;object-fit:cover;display:block;";
+    img.referrerPolicy = "no-referrer";
+    img.alt = "";
+    img.onload = () => { el.classList.remove("loading"); };
+    img.onerror = () => { showCoverFallback(el); };
+    img.src = coverUrl;
+    el.appendChild(img);
+  } else {
+    showCoverFallback(el);
+  }
+}
+
+function showCoverFallback(el) {
+  el.style.background = "linear-gradient(135deg, #2a2a4a, #3a3a5a)";
+  el.style.display = "flex";
+  el.style.alignItems = "center";
+  el.style.justifyContent = "center";
+  el.innerHTML = '<span style="font-size:36px;opacity:.6">🎬</span>';
+}
+
+// ========== 获取分P列表 ==========
+async function fetchEpisodes(bvid){
+// 先查缓存
+if(epDataCache[bvid]&&Date.now()-epDataCache[bvid]._ts<86400000)return epDataCache[bvid];
+// 策略1：原生桥接（WebView中可靠）
+let eps = await getEpisodesViaNative(bvid);
+// 策略2：JS fetch（Web场景）
+if(!eps){
+try{
+const r=await fetch(`https://api.bilibili.com/x/player/pagelist?bvid=${bvid}`);
+const d=await r.json();
+if(d.code===0&&d.data&&d.data.length>0){
+eps=d.data.map(p=>({bvid:bvid,page:p.page,cid:p.cid,title:p.part,duration:p.duration}));
+}}catch(e){}
+}
+if(eps&&eps.length>0){
+epDataCache[bvid]={episodes:eps,count:eps.length,_ts:Date.now()};saveEpCache();return epDataCache[bvid];
+}
+return null;
+}
+
+async function getEpisodeData(v){
+// 判断是否是手动合集（bvid中包含逗号）
+if(v.bvid&&v.bvid.includes(",")){
+const bvids=v.bvid.split(",").map(s=>s.trim()).filter(Boolean);
+const eps=[];
+for(let i=0;i<bvids.length;i++){
+try{const r=await fetch(`https://api.bilibili.com/x/web-interface/view?bvid=${bvids[i]}`);
+const d=await r.json();if(d.code===0&&d.data){
+eps.push({bvid:bvids[i],page:1,cid:d.data.cid,title:d.data.title||`第${i+1}集`,duration:d.data.duration});
+}}catch(e){eps.push({bvid:bvids[i],page:1,cid:0,title:`第${i+1}集`,duration:0});}
+}
+return {episodes:eps,count:eps.length};
+}
+// 自动检测分P
+const result=await fetchEpisodes(v.bvid);
+if(result&&result.count>1)return result;
+// 单视频
+return {episodes:[{bvid:v.bvid,page:1,cid:0,title:v.title,duration:0}],count:1};
+}
+
+// ========== 判断是否合集 ==========
+function isCollection(video){
+// 手动合集
+if(video.bvid&&video.bvid.includes(","))return true;
+// 从缓存判断
+if(epDataCache[video.bvid]&&epDataCache[video.bvid].count>1)return true;
+// 默认可能多集
+const tag=video.tag||"";
+if(tag.includes("集")||tag.includes("合集")||tag.includes("多集"))return null; // 待确认
+return false;
+}
+
+// ========== 渲染卡片 ==========
+function renderCards(){
+const grid=document.getElementById("card-grid"),flt=filtered();
+grid.innerHTML="";
+if(!flt.length){grid.innerHTML='<div class="empty-state"><div class="empty-icon">📭</div><div>这个分类下还没有动画片哦</div><div style="font-size:14px;margin-top:4px;color:var(--t3)">去家长管理添加吧~</div></div>';return}
+
+flt.forEach((v,i)=>{
+const card=document.createElement("div");card.className="card";card.tabIndex=0;card.dataset.index=i;
+card.addEventListener("click",()=>openVideo(v));
+const cover=document.createElement("div");cover.className="card-cover loading";loadCover(v.bvid,cover,false);
+
+const playOv=document.createElement("div");playOv.className="card-play-overlay";playOv.innerHTML="▶ 播放";cover.appendChild(playOv);
+
+if(v.tag){const badge=document.createElement("div");badge.className="card-episode-badge";badge.textContent=v.tag;cover.appendChild(badge);}
+
+// 合集标记
+if(v.bvid&&v.bvid.includes(",")||(epDataCache[v.bvid]&&epDataCache[v.bvid].count>1)){
+const colBadge=document.createElement("div");colBadge.className="card-collection-badge";
+colBadge.innerHTML=`📂 ${epDataCache[v.bvid]?epDataCache[v.bvid].count+'集':(v.bvid.includes(",")?v.bvid.split(",").length+'集':'合集')}`;
+cover.appendChild(colBadge);
+}
+
+const body=document.createElement("div");body.className="card-body";
+body.innerHTML=`<div class="card-title">${v.title}</div><div class="card-meta">${v.category||'动画片'}</div>`;
+card.appendChild(cover);card.appendChild(body);grid.appendChild(card);
+});
+
+// 异步加载分P数据并更新合集标记
+flt.forEach((v,i)=>{
+if(!(v.bvid&&v.bvid.includes(","))&&(!epDataCache[v.bvid]||epDataCache[v.bvid]._ts<Date.now()-86400000)){
+fetchEpisodes(v.bvid).then(result=>{
+if(result&&result.count>1){
+const card=document.querySelectorAll("#card-grid .card")[i];
+if(card&&!card.querySelector(".card-collection-badge")){
+const colBadge=document.createElement("div");colBadge.className="card-collection-badge";
+colBadge.innerHTML=`📂 ${result.count}集`;
+card.querySelector(".card-cover").appendChild(colBadge);
+}
+}
+});
+}
+});
+}
+
+// ========== 分类标签 ==========
+function renderCategories(){
+const bar=document.getElementById("category-bar");bar.innerHTML="";
+const cnt={};videos.forEach(v=>{const c=v.category||"未分类";cnt[c]=(cnt[c]||0)+1;});
+CATEGORIES.forEach(cat=>{
+const t=document.createElement("button");t.className=`cat-tag${cat.id===activeCat?' active':''}`;t.tabIndex=-1;
+t.innerHTML=`<span class="cat-emoji">${cat.emoji}</span>${cat.label}`;
+if(cat.id==="all")t.innerHTML+=`<span class="cat-count">${videos.length}</span>`;
+else if(cnt[cat.id])t.innerHTML+=`<span class="cat-count">${cnt[cat.id]}</span>`;
+t.addEventListener("click",()=>switchCat(cat.id));bar.appendChild(t);
+});
+}
+function switchCat(id){if(activeCat===id)return;activeCat=id;saveCat();focusIdx=0;focusRow=0;focusCol=0;renderCategories();renderCards();setTimeout(()=>focusCard(0),100);}
+
+function renderAll(){renderBanner();renderCategories();renderCards();}
+
+// ========== 打开视频（合集or单集） ==========
+async function openVideo(v){
+// 手动合集（多BV号逗号分隔）
+if(v.bvid&&v.bvid.includes(",")){
+openEpisodeView(v);return;
+}
+// 检查分P
+const epData=await getEpisodeData(v);
+if(epData.count>1){
+openEpisodeView(v,epData);
+}else{
+playSingleVideo(v.bvid,v.title,0);
+}
+}
+
+// ========== 选集页面 ==========
+async function openEpisodeView(v,preloadedEp){
+document.getElementById("episode-view").classList.add("active");episodeViewVisible=true;
+document.getElementById("ep-main-title").textContent=v.title;
+currentEpisodes=preloadedEp||await getEpisodeData(v);
+currentCollectionTitle=v.title;
+currentEpIndex=0;
+
+const cnt=currentEpisodes.count;
+document.getElementById("ep-sub-info").textContent=`共 ${cnt} 集 · 遥控器选择后按确认键播放`;
+
+renderEpisodeGrid();
+setTimeout(()=>focusEpisodeCard(0),200);
+}
+
+function renderEpisodeGrid(){
+const grid=document.getElementById("ep-grid");grid.innerHTML="";
+if(!currentEpisodes||!currentEpisodes.episodes)return;
+currentEpisodes.episodes.forEach((ep,i)=>{
+const card=document.createElement("div");card.className=`ep-card${currentEpIndex===i?' playing':''}`;
+card.tabIndex=0;card.dataset.index=i;
+card.addEventListener("click",()=>{currentEpIndex=i;playCurrentEpisode();});
+
+const num=document.createElement("div");num.className="ep-card-num";num.textContent=i+1;
+card.appendChild(num);
+
+const cover=document.createElement("div");cover.className="ep-cover loading";
+if(currentEpisodes.episodes[0].bvid===ep.bvid){
+// 同一BV多P，封面相同
+loadCover(ep.bvid,cover,false);
+}else{loadCover(ep.bvid,cover,false);}
+card.appendChild(cover);
+
+const body=document.createElement("div");body.className="ep-card-body";
+const dur=ep.duration?`${Math.floor(ep.duration/60)}分${ep.duration%60}秒`:'';
+body.innerHTML=`<div class="ep-card-title">${ep.title}</div><div class="ep-card-duration">${dur}</div>`;
+card.appendChild(body);
+grid.appendChild(card);
+});
+}
+
+function playCurrentEpisode(){
+if(!currentEpisodes||!currentEpisodes.episodes||currentEpIndex>=currentEpisodes.episodes.length)return;
+const ep=currentEpisodes.episodes[currentEpIndex];
+const bvid=ep.bvid,page=ep.page||1;
+const url=`https://player.bilibili.com/player.html?bvid=${bvid}&p=${page}&autoplay=1&danmaku=0&highQuality=1`;
+const ov=document.getElementById("player-overlay"),fr=document.getElementById("player-frame");
+const ld=document.getElementById("player-loading");
+document.getElementById("player-now-title").textContent=`${currentCollectionTitle} · ${ep.title}`;
+document.getElementById("player-ep-label").textContent=`第 ${currentEpIndex+1} / ${currentEpisodes.count} 集`;
+// 下一集按钮
+const nextBtn=document.getElementById("player-next-btn");
+if(currentEpIndex<currentEpisodes.count-1){
+nextBtn.style.display="flex";
+nextBtn.textContent=`下一集 ▶`;
+}else{nextBtn.style.display="none";}
+// 选集按钮
+document.getElementById("player-ep-list-btn").style.display=currentEpisodes.count>1?"flex":"none";
+
+ld.style.display="flex";fr.src=url;ov.classList.add("active");playerVisible=true;
+fr.onload=()=>{setTimeout(()=>ld.style.display="none",800);};
+
+addHistory({bvid:bvid,title:`${currentCollectionTitle} · ${ep.title}`,category:videos.find(v=>v.title===currentCollectionTitle)?.category||"",tag:`第${currentEpIndex+1}集`});
+}
+
+function playSingleVideo(bvid,title,idx){
+const url=`https://player.bilibili.com/player.html?bvid=${bvid}&autoplay=1&danmaku=0&highQuality=1`;
+const ov=document.getElementById("player-overlay"),fr=document.getElementById("player-frame"),ld=document.getElementById("player-loading");
+document.getElementById("player-now-title").textContent=title;
+document.getElementById("player-ep-label").textContent="";
+document.getElementById("player-next-btn").style.display="none";
+document.getElementById("player-ep-list-btn").style.display="none";
+currentEpisodes=null;currentEpIndex=-1;
+ld.style.display="flex";fr.src=url;ov.classList.add("active");playerVisible=true;
+fr.onload=()=>{setTimeout(()=>ld.style.display="none",800);};
+addHistory({bvid:bvid,title:title,category:videos[Math.floor(idx/gridCols)]?.category||"",tag:""});
+}
+
+function playNextEpisode(){
+if(!currentEpisodes||currentEpIndex>=currentEpisodes.count-1)return;
+currentEpIndex++;
+renderEpisodeGrid();
+playCurrentEpisode();
+// 更新选集弹窗
+if(epPopupVisible)renderEpPopup();
+}
+
+function playAllEpisodes(){
+if(!currentEpisodes||!currentEpisodes.episodes.length)return;
+currentEpIndex=0;
+renderEpisodeGrid();
+playCurrentEpisode();
+}
+
+function closeEpisodeView(){
+document.getElementById("episode-view").classList.remove("active");episodeViewVisible=false;
+currentEpisodes=null;currentEpIndex=-1;
+setTimeout(()=>{updateGridCols();focusCard(focusIdx);},200);
+}
+
+// ========== 选集弹窗（播放器内） ==========
+function toggleEpPopup(){
+epPopupVisible=!epPopupVisible;
+const popup=document.getElementById("ep-popup");
+if(epPopupVisible){renderEpPopup();popup.classList.add("active");}
+else{popup.classList.remove("active");}
+}
+function renderEpPopup(){
+const list=document.getElementById("ep-popup-list");list.innerHTML="";
+if(!currentEpisodes)return;
+currentEpisodes.episodes.forEach((ep,i)=>{
+const item=document.createElement("div");item.className=`ep-popup-item${currentEpIndex===i?' playing':''}`;
+item.addEventListener("click",()=>{
+currentEpIndex=i;renderEpisodeGrid();playCurrentEpisode();renderEpPopup();
+});
+item.innerHTML=`<div class="ep-popup-num">${i+1}</div><div class="ep-popup-item-title">${ep.title}</div><div class="ep-popup-item-time">${ep.duration?Math.floor(ep.duration/60)+':'+String(ep.duration%60).padStart(2,'0'):''}</div>`;
+list.appendChild(item);
+});
+}
+function closePlayer(){
+const ov=document.getElementById("player-overlay"),fr=document.getElementById("player-frame"),ld=document.getElementById("player-loading");
+fr.src="";ov.classList.remove("active");ld.style.display="flex";playerVisible=false;
+document.getElementById("ep-popup").classList.remove("active");epPopupVisible=false;
+setTimeout(()=>{updateGridCols();if(episodeViewVisible){focusEpisodeCard(currentEpIndex);}else{focusCard(focusIdx);}},200);
+}
+
+// ========== 焦点管理 ==========
+function focusCard(idx){
+const cards=document.querySelectorAll("#card-grid .card");if(!cards.length)return;
+const i=Math.max(0,Math.min(idx,cards.length-1));
+document.querySelectorAll(".card.focused").forEach(c=>c.classList.remove("focused"));
+cards[i].classList.add("focused");cards[i].focus({preventScroll:true});
+cards[i].scrollIntoView({behavior:"smooth",block:"nearest"});
+focusIdx=i;focusRow=Math.floor(i/gridCols);focusCol=i%gridCols;
+}
+function moveFocus(dir){
+const cards=document.querySelectorAll("#card-grid .card");if(!cards.length)return;
+const rows=Math.ceil(cards.length/gridCols);let r=focusRow,c=focusCol;
+switch(dir){
+case"up":r=Math.max(0,focusRow-1);break;
+case"down":r=Math.min(rows-1,focusRow+1);break;
+case"left":c=focusCol-1;if(c<0){c=gridCols-1;r=Math.max(0,focusRow-1);}break;
+case"right":c=focusCol+1;if(c>=gridCols){c=0;r=Math.min(rows-1,focusRow+1);}break;
+}
+const ni=Math.min(r*gridCols+c,cards.length-1);if(ni>=0)focusCard(ni);
+}
+
+function focusEpisodeCard(idx){
+const cards=document.querySelectorAll("#ep-grid .ep-card");if(!cards.length)return;
+const i=Math.max(0,Math.min(idx,cards.length-1));
+document.querySelectorAll(".ep-card.focused").forEach(c=>c.classList.remove("focused"));
+cards[i].classList.add("focused");cards[i].focus({preventScroll:true});
+cards[i].scrollIntoView({behavior:"smooth",block:"nearest"});
+}
+
+// ========== 历史记录 ==========
+function addHistory(v){
+try{let h=[];const r=localStorage.getItem(SK_HISTORY);if(r)h=JSON.parse(r);
+h=h.filter(x=>x.bvid!==v.bvid||x.title!==v.title);h.unshift({...v,time:Date.now()});h=h.slice(0,20);
+localStorage.setItem(SK_HISTORY,JSON.stringify(h));}catch(e){}
+}
+function getHistory(){try{const r=localStorage.getItem(SK_HISTORY);return r?JSON.parse(r):[];}catch(e){return[];}}
+
+function showHistory(){
+const hist=getHistory();if(!hist.length){showToast("还没有观看记录哦~");return}
+const grid=document.getElementById("card-grid");grid.innerHTML="";
+hist.forEach((v,i)=>{
+const card=document.createElement("div");card.className="card";card.tabIndex=0;card.dataset.index=i;
+card.addEventListener("click",()=>playSingleVideo(v.bvid,v.title,i));
+const cover=document.createElement("div");cover.className="card-cover loading";loadCover(v.bvid,cover,false);
+const playOv=document.createElement("div");playOv.className="card-play-overlay";playOv.innerHTML="▶ 继续";cover.appendChild(playOv);
+const body=document.createElement("div");body.className="card-body";
+body.innerHTML=`<div class="card-title">${v.title}</div><div class="card-meta">${timeAgo(v.time)} 看过</div>`;
+card.appendChild(cover);card.appendChild(body);grid.appendChild(card);
+});
+document.querySelectorAll(".cat-tag").forEach(t=>t.classList.remove("active"));
+document.getElementById("btn-history").classList.add("active");
+grid.appendChild(Object.assign(document.createElement("div"),{style:"grid-column:1/-1;text-align:center;padding:8px;",innerHTML:'<span style="color:var(--t3);font-size:14px;cursor:pointer;" onclick="switchCat(\'all\')">← 返回全部动画片</span>'}));
+document.getElementById("card-grid").scrollTop=0;
+}
+function timeAgo(ts){const d=Date.now()-ts,m=Math.floor(d/60000);if(m<1)return"刚刚";if(m<60)return`${m}分钟前`;const h=Math.floor(m/60);if(h<24)return`${h}小时前`;return`${Math.floor(h/24)}天前`;}
+
+// ========== 键盘/遥控器 ==========
+function bindKeys(){
+document.addEventListener("keydown",e=>{
+if(document.getElementById("admin-overlay").classList.contains("active")){
+if(e.key==="Escape"){e.preventDefault();toggleAdmin();}return;
+}
+if(playerVisible){
+if(e.key==="Backspace"||e.key==="Escape"||e.key==="GoBack"||e.key==="Back"||e.key==="XF86Back"){
+e.preventDefault();closePlayer();return;
+}
+// 播放器中方向键可以切换选集弹窗焦点
+if(epPopupVisible&&(e.key==="ArrowDown"||e.key==="ArrowUp")){e.preventDefault();return;}
+return;
+}
+if(episodeViewVisible){
+switch(e.key){
+case"ArrowUp":case"ArrowDown":case"ArrowLeft":case"ArrowRight":e.preventDefault();moveEpFocus(e.key);break;
+case"Enter":case" ":{e.preventDefault();const f=document.querySelector("#ep-grid .ep-card.focused");if(f)f.click();break;}
+case"Backspace":case"Escape":case"GoBack":e.preventDefault();closeEpisodeView();break;
+}return;
+}
+switch(e.key){
+case"ArrowUp":e.preventDefault();moveFocus("up");break;
+case"ArrowDown":e.preventDefault();moveFocus("down");break;
+case"ArrowLeft":e.preventDefault();moveFocus("left");break;
+case"ArrowRight":e.preventDefault();moveFocus("right");break;
+case"Enter":case" ":{e.preventDefault();const f=document.querySelector("#card-grid .card.focused");if(f)f.click();break;}
+case"Escape":case"Backspace":e.preventDefault();if(document.getElementById("btn-history").classList.contains("active")){switchCat("all");document.getElementById("btn-history").classList.remove("active");}break;
+}
+});
+}
+function moveEpFocus(dir){const cards=document.querySelectorAll("#ep-grid .ep-card");if(!cards.length)return;document.querySelectorAll(".ep-card.focused").forEach(c=>c.classList.remove("focused"));let idx=Array.from(cards).findIndex(c=>c.classList.contains("focused"));if(idx<0)idx=0;switch(dir){case"up":idx=Math.max(0,idx-gridCols);break;case"down":idx=Math.min(cards.length-1,idx+gridCols);break;case"left":idx=Math.max(0,idx-1);break;case"right":idx=Math.min(cards.length-1,idx+1);break;}cards[idx].classList.add("focused");cards[idx].focus({preventScroll:true});cards[idx].scrollIntoView({behavior:"smooth",block:"nearest"});}
+function bindResize(){window.addEventListener("resize",()=>{updateGridCols();focusRow=Math.floor(focusIdx/gridCols);focusCol=focusIdx%gridCols;});}
+
+// ========== 管理面板 ==========
+function toggleAdmin(){
+const ov=document.getElementById("admin-overlay");
+if(!ov.classList.contains("active")){
+const text=videos.map(v=>`${v.bvid} | ${v.title} | ${v.category||''} | ${v.tag||''}`).join("\n");
+document.getElementById("admin-textarea").value=text;ov.classList.add("active");
+setTimeout(()=>document.getElementById("admin-textarea").focus(),100);
+}else{ov.classList.remove("active");}
+}
+function resetToDefault(){
+document.getElementById("admin-textarea").value=DEFAULT_VIDEOS.map(v=>`${v.bvid} | ${v.title} | ${v.category||''} | ${v.tag||''}`).join("\n");
+showToast("已恢复默认列表，点击保存生效");
+}
+function saveAndRefresh(){
+const raw=document.getElementById("admin-textarea").value.trim(),lines=raw.split("\n").filter(l=>l.trim()),newVids=[];
+for(const line of lines){
+const parts=line.split("|").map(s=>s.trim());
+if(parts.length>=2&&parts[0])newVids.push({bvid:parts[0],title:parts[1],category:parts[2]||"",tag:parts[3]||""});
+}
+if(!newVids.length){showToast("⚠️ 至少需要保留一个动画片！");return;}
+videos=newVids;localStorage.setItem(SK_VIDEOS,JSON.stringify(videos));activeCat="all";saveCat();
+focusIdx=0;focusRow=0;focusCol=0;bannerIdx=0;toggleAdmin();renderAll();
+document.getElementById("btn-history").classList.remove("active");
+setTimeout(()=>focusCard(0),200);showToast("✅ 动画片列表已更新！合集会自动识别分集");
+}
+
+// 导出配置为JSON文件下载
+function exportConfig(){
+const data=JSON.stringify(videos,null,2);
+const blob=new Blob([data],{type:"application/json"});
+const a=document.createElement("a");a.href=URL.createObjectURL(blob);
+a.download="小企鹅动画屋-配置.json";a.click();
+showToast("📤 配置已导出，把这个文件发给电视端导入");
+}
+
+// 导入配置（文件选择）
+function importConfig(){
+const input=document.createElement("input");input.type="file";input.accept=".json";
+input.onchange=e=>{
+const file=e.target.files[0];if(!file)return;
+const reader=new FileReader();
+reader.onload=ev=>{
+try{
+const data=JSON.parse(ev.target.result);
+if(Array.isArray(data)&&data.length>0){
+videos=data;localStorage.setItem(SK_VIDEOS,JSON.stringify(videos));
+activeCat="all";saveCat();focusIdx=0;focusRow=0;focusCol=0;bannerIdx=0;
+renderAll();toggleAdmin();
+document.getElementById("btn-history").classList.remove("active");
+setTimeout(()=>focusCard(0),200);
+showToast("📥 配置导入成功！共 "+data.length+" 部动画片");
+}else{showToast("⚠️ 配置文件格式不正确");}
+}catch(e){showToast("⚠️ 文件解析失败");}
+};reader.readAsText(file);
+};input.click();
+}
+
+// Toast
+let tt;
+function showToast(m){const e=document.getElementById("toast");e.textContent=m;e.classList.add("show");if(tt)clearTimeout(tt);tt=setTimeout(()=>e.classList.remove("show"),2500);}
+
+// 启动
+loadEpCache();
+loadVideos();
+init();
+
+console.log("🐧 小企鹅动画屋 v3 | 合集自动识别 · B站分P支持 · 自动连播 · 选集弹窗");
+console.log("💡 支持格式：单BV / 多P合集(自动识别) / 多BV逗号分隔 / 合集URL");
+</script>
+</body>
+</html>
